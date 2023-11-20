@@ -1,0 +1,33 @@
+# Custom field expression
+
+cf.foo
+
+==>
+
+Root(CustomFieldExpression(cf, ".", PropertyName))
+
+# BinaryExpression => CompareOp
+
+cf.foo == "bar"
+
+==>
+
+Root(BinaryExpression(CustomFieldExpression(cf, ".", PropertyName), CompareOp, String))
+
+# Complex expression
+
+(cf.foo == "bar" && cf.quux-bar.options.foo < 5) || cf.baz not in [cf.xyz, "b", 5]
+
+==>
+
+Root(BinaryExpression(
+  ParenthesizedExpression("(", BinaryExpression(
+    BinaryExpression(CustomFieldExpression(cf, ".", PropertyName), CompareOp, String),
+    LogicOp,
+    BinaryExpression(CustomFieldExpression(cf, ".", PropertyName "." options "." PropertyName), CompareOp, Number),
+  ), ")"),
+  LogicOp,
+  BinaryExpression(
+    CustomFieldExpression(cf, ".", PropertyName),
+    CompareOp,
+    ArrayExpression("[", CustomFieldExpression(cf, ".", PropertyName), ",", String, ",", Number, "]"))))
