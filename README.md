@@ -1,21 +1,11 @@
-# CodeMirror 6 language package template
+# 4me UI extension DSLs
 
-This is an example repository containing a minimal [CodeMirror](https://codemirror.net/6/) language support package. The idea is to clone it, rename it, and edit it to create support for a new language.
+Contains [Lezer](https://lezer.codemirror.net/) grammar files for the DSL (or DSLs) used in the 4me graphical UI extension builder.
 
-Things you'll need to do (see the [language support example](https://codemirror.net/6/examples/lang-package/) for a more detailed tutorial):
+To build and run tests:
 
- * `git grep uix-condition` and replace all instances with your language name.
+```
+npm run prepare && npm test
+```
 
- * Rewrite the grammar in `src/syntax.grammar` to cover your language. See the [Lezer system guide](https://lezer.codemirror.net/docs/guide/#writing-a-grammar) for information on this file format.
-
- * Adjust the metadata in `src/index.ts` to work with your new grammar.
-
- * Adjust the grammar tests in `test/cases.txt`.
-
- * Build (`npm run prepare`) and test (`npm test`).
-
- * Rewrite this readme file.
-
- * Optionally add a license.
-
- * Publish. Put your package on npm under a name like `codemirror-lang-uix-condition`.
+This repo was originally based on https://github.com/codemirror/lang-example.

@@ -4,7 +4,7 @@ cf.foo
 
 ==>
 
-Root(CustomFieldExpression(cf, ".", PropertyName))
+SingleExpression(MemberExpression(VariableName, ".", PropertyName))
 
 # BinaryExpression => CompareOp
 
@@ -12,22 +12,45 @@ cf.foo == "bar"
 
 ==>
 
-Root(BinaryExpression(CustomFieldExpression(cf, ".", PropertyName), CompareOp, String))
+SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),CompareOp,String))
 
-# Complex expression
+# BinaryExpression => MatchOp 1
 
-(cf.foo == "bar" && cf.quux-bar.options.foo < 5) || cf.baz not in [cf.xyz, "b", 5]
+cf.foo $= "bar"
 
 ==>
 
-Root(BinaryExpression(
-  ParenthesizedExpression("(", BinaryExpression(
-    BinaryExpression(CustomFieldExpression(cf, ".", PropertyName), CompareOp, String),
-    LogicOp,
-    BinaryExpression(CustomFieldExpression(cf, ".", PropertyName "." options "." PropertyName), CompareOp, Number),
-  ), ")"),
-  LogicOp,
-  BinaryExpression(
-    CustomFieldExpression(cf, ".", PropertyName),
-    CompareOp,
-    ArrayExpression("[", CustomFieldExpression(cf, ".", PropertyName), ",", String, ",", Number, "]"))))
+SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),MatchOp,String))
+
+# BinaryExpression => MatchOp 2
+
+cf.foo *= "bar"
+
+==>
+
+SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),MatchOp,String))
+
+# Contains
+
+foo in [1,2]
+
+==>
+
+SingleExpression(BinaryExpression(VariableName,InOp,ArrayExpression("[",Number,",",Number,"]")))
+
+# Regular expression
+
+foo =~ /[^a-z]*$/g
+
+==>
+
+SingleExpression(BinaryExpression(VariableName,MatchOp,RegExp))
+
+# Match
+
+foo ^= "bar"
+
+==>
+
+SingleExpression(BinaryExpression(VariableName,MatchOp,String))
+

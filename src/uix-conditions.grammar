@@ -1,0 +1,234 @@
+@precedence {
+  member,
+  newArgs,
+  call,
+  prefix,
+  exp @left,
+  times @left,
+  plus @left,
+  shift @left,
+  rel @left,
+  regex @left,
+  match @left,
+  equal @left,
+  bitOr @left,
+  bitXor @left,
+  bitAnd @left,
+  and @left,
+  or @left,
+  ternary @right
+}
+
+@top SingleExpression { expression }
+
+pattern { VariableDefinition }
+
+patternAssignTyped {
+  pattern ("=" expressionNoComma)?
+}
+
+ParamList {
+  "(" commaSep<patternAssignTyped> ")"
+}
+
+expression[@isGroup=Expression] {
+  expressionNoComma
+}
+
+expressionNoComma {
+  Number |
+  String |
+  TemplateString |
+  VariableName |
+  boolean |
+  kw<"null"> |
+  RegExp |
+  ArrayExpression |
+  ObjectExpression { "{" commaSep<Property> ~destructure "}" } |
+  NewExpression { kw<"new"> expressionNoComma (!newArgs ArgList)? } |
+  UnaryExpression |
+  ParenthesizedExpression |
+  ArrowFunction |
+  MemberExpression |
+  BinaryExpression |
+  ConditionalExpression { expressionNoComma !ternary questionOp expressionNoComma LogicOp<":"> expressionNoComma } |
+  CallExpression { expressionNoComma !call "?."? ArgList }
+}
+
+ParenthesizedExpression { "(" expression ")" }
+
+ArrayExpression {
+  "[" commaSep1<"..."? expressionNoComma | ""> ~destructure "]"
+}
+
+propName { PropertyDefinition | "[" expression "]" | Number | String }
+
+Property {
+  propName ~destructure (":" expressionNoComma)?
+}
+
+UnaryExpression {
+  !prefix (LogicOp<"!"> | BitOp<"~"> | ArithOp<"+" | "-">)
+  expressionNoComma
+}
+
+BinaryExpression {
+  expressionNoComma !exp ArithOp<"**"> expressionNoComma |
+  expressionNoComma !times (divide | ArithOp<"%"> | ArithOp<"*">) expressionNoComma |
+  expressionNoComma !plus ArithOp<"+" | "-"> expressionNoComma |
+  expressionNoComma !shift BitOp<">>" ">"? | "<<"> expressionNoComma |
+  expressionNoComma !rel (LessThan | CompareOp<"<=" | ">" "="?> | kw<"instanceof">) expressionNoComma |
+  expressionNoComma !rel InOp<"in"> expressionNoComma |
+  expressionNoComma !equal CompareOp<"==" "="? | "!=" "="?> expressionNoComma |
+  expressionNoComma !regex MatchOp<"=~"> expressionNoComma |
+  expressionNoComma !match MatchOp<"*=" | "^=" | "$="> expressionNoComma |
+  expressionNoComma !bitOr BitOp { "|" } expressionNoComma |
+  expressionNoComma !bitXor BitOp<"^"> expressionNoComma |
+  expressionNoComma !bitAnd BitOp { "&" } expressionNoComma |
+  expressionNoComma !and LogicOp<"&&"> expressionNoComma |
+  expressionNoComma !or LogicOp<"||" | "??"> expressionNoComma
+}
+
+MemberExpression {
+  expressionNoComma !member (("." | "?.") PropertyName | "?."? "[" expression "]")
+}
+
+ArgList {
+  "(" commaSep<"..."? expressionNoComma> ")"
+}
+
+ArrowFunction {
+  (ParamList { VariableDefinition } | ParamList) "=>" expressionNoComma
+}
+
+@skip {} {
+  TemplateString {
+    templateStart (templateEscape | templateContent | templateExpr)* templateEnd
+  }
+
+  String {
+    '"' (stringContentDouble | Escape)* ('"' | "\n") |
+    "'" (stringContentSingle | Escape)* ("'" | "\n")
+  }
+
+  BlockComment { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+}
+
+templateExpr[@name=Interpolation] { InterpolationStart expression InterpolationEnd }
+
+commaSep<content> {
+  "" | content ("," content?)*
+}
+
+commaSep1<content> {
+  content ("," content)*
+}
+
+// Keywords
+
+kw<term> { @specialize[@name={term}]<identifier, term> }
+InOp<term> { @specialize<identifier, term> }
+
+boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
+
+VariableName { identifier ~arrow }
+
+VariableDefinition { identifier ~arrow }
+
+PropertyName { propertyWord }
+
+PropertyDefinition { word }
+
+questionOp[@name=LogicOp] { "?" }
+
+@skip { spaces | newline | LineComment | BlockComment }
+
+@local tokens {
+  InterpolationStart[closedBy=InterpolationEnd] { "${" }
+  templateEnd { "`" }
+  templateEscape[@name=Escape] { Escape }
+  @else templateContent
+}
+
+@local tokens {
+  blockCommentEnd { "*/" }
+  blockCommentNewline { "\n" }
+  @else blockCommentContent
+}
+
+@tokens {
+  spaces[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline[@export] { $[\r\n\u2028\u2029] }
+
+  LineComment { "//" ![\n]* }
+
+  divide[@name=ArithOp] { "/" }
+
+  @precedence { "/*", LineComment, divide }
+
+  @precedence { "/*", LineComment, RegExp }
+
+  identifierChar { @asciiLetter | $[_$\u{a1}-\u{10ffff}] }
+
+  word { identifierChar (identifierChar | @digit)* }
+
+  propertyWord { word "?"? }
+
+  identifier { word }
+
+  @precedence { spaces, newline, propertyWord }
+
+  @precedence { spaces, newline, identifier }
+
+  @precedence { spaces, newline, word }
+
+  hex { @digit | $[a-fA-F] }
+
+  Number {
+    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+    @digit ("_" | @digit)* "n" |
+    "0x" (hex | "_")+ "n"? |
+    "0b" $[01_]+ "n"? |
+    "0o" $[0-7_]+ "n"?
+  }
+
+  @precedence { Number "." }
+
+  Escape {
+    "\\" ("x" hex hex | "u" ("{" hex+ "}" | hex hex hex hex) | ![xu])
+  }
+
+  stringContentSingle { ![\\\n']+ }
+
+  stringContentDouble { ![\\\n"]+ }
+
+  templateStart { "`" }
+
+  InterpolationEnd[openedBy=InterpolationStart] { "}" }
+
+  ArithOp<expr> { expr }
+  LogicOp<expr> { expr }
+  BitOp<expr> { expr }
+  CompareOp<expr> { expr }
+  MatchOp<expr> { expr }
+
+  @precedence { MatchOp, "*", ArithOp }
+  @precedence { MatchOp, identifier }
+
+  RegExp { "/" (![/\\\n[] | "\\" ![\n] | "[" (![\n\\\]] | "\\" ![\n])* "]")+ ("/" $[gimsuy]*)? }
+
+  LessThan[@name=CompareOp] { "<" }
+
+  "="[@name=Equals]
+  "..."[@name=Spread]
+  "=>"[@name=Arrow]
+
+  "(" ")" "[" "]" "{" "}" ">"
+
+  "?." "." "," ";" ":" "@"
+}
+
+@detectDelim
+
+// @external propSource jsHighlight from "./highlight"

@@ -1,7 +1,7 @@
 {
-  "name": "codemirror-lang-uix-condition",
+  "name": "4me-uix-dsl",
   "version": "0.1.0",
-  "description": "uix-condition language support for CodeMirror",
+  "description": "DSLs for the UI extension builder",
   "scripts": {
     "test": "mocha test/test.js",
     "prepare": "rollup -c"
@@ -16,7 +16,6 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@codemirror/language": "^6.0.0",
     "@lezer/highlight": "^1.0.0",
     "@lezer/lr": "^1.0.0"
   },
