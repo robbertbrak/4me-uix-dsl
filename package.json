@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "DSLs for the UI extension builder",
   "scripts": {
-    "build": "lezer-generator src/uix-conditions.grammar -o src/parser && rollup -c",
-    "build-debug": "lezer-generator src/uix-conditions.grammar --names -o src/parser && rollup -c",
+    "build": "lezer-generator src/uix-conditions.grammar -o src/parser --export uixConditionsParser && rollup -c",
+    "build-debug": "lezer-generator src/uix-conditions.grammar --names -o src/parser --export uixConditionsParser && rollup -c",
     "test": "mocha test/test.js",
     "prepare": "npm run build"
   },
