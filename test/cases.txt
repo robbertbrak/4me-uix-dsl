@@ -14,43 +14,10 @@ cf.foo == "bar"
 
 SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),CompareOp,String))
 
-# BinaryExpression => MatchOp 1
-
-cf.foo $= "bar"
-
-==>
-
-SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),MatchOp,String))
-
-# BinaryExpression => MatchOp 2
-
-cf.foo *= "bar"
-
-==>
-
-SingleExpression(BinaryExpression(MemberExpression(VariableName,".",PropertyName),MatchOp,String))
-
-# Contains
-
-foo in [1,2]
-
-==>
-
-SingleExpression(BinaryExpression(VariableName,InOp,ArrayExpression("[",Number,",",Number,"]")))
-
 # Regular expression
 
-foo =~ /[^a-z]*$/g
+foo.match(/[^a-z]*$/g)
 
 ==>
 
-SingleExpression(BinaryExpression(VariableName,MatchOp,RegExp))
-
-# Match
-
-foo ^= "bar"
-
-==>
-
-SingleExpression(BinaryExpression(VariableName,MatchOp,String))
-
+SingleExpression(CallExpression(MemberExpression(VariableName,".",PropertyName),ArgList("(",RegExp,")")))
