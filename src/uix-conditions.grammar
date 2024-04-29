@@ -49,8 +49,6 @@ expressionNoComma {
   RegExp |
   ArrayExpression |
   ObjectExpression { "{" commaSep<Property> ~destructure "}" } |
-  NewTarget { kw<"new"> "." PropertyName } |
-  NewExpression { kw<"new"> expressionNoComma (!newArgs ArgList)? } |
   UnaryExpression |
   ParenthesizedExpression |
   ArrowFunction |
